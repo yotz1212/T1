@@ -22,7 +22,8 @@
       .pic img{max-height:36px;max-width:100%;border-radius:6px;object-fit:cover}
       .nm{font-weight:600;font-size:14px;margin-top:2px}
       .pr{color:var(--sub);font-size:12px}
-      .badge{position:absolute;top:6px;right:6px;background:var(--ac);color:#fff;border-radius:999px;min-width:24px;padding:2px 7px;font-size:14px;font-weight:700}
+      .badge{position:absolute;top:4px;left:4px;background:var(--ac);color:#fff;border-radius:999px;min-width:24px;padding:2px 7px;font-size:14px;font-weight:700;pointer-events:none}
+      .minus{position:absolute;top:2px;right:2px;width:32px;height:32px;padding:0;border-radius:50%;font-size:20px;line-height:1;background:var(--card);color:var(--ac);border:1px solid var(--ac)}
       .add{border-style:dashed;color:var(--sub);display:flex;align-items:center;justify-content:center;min-height:96px;font-size:13px}
       #bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--ln);padding:6px 12px calc(6px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.12)}
       #lines{max-height:170px;overflow-y:auto;font-size:15px}
@@ -109,11 +110,17 @@
         return t;
       }
 
+      function dec(id){
+        cart[id]--;
+        if(cart[id]<=0)delete cart[id];
+        render();
+      }
+
       function render(){
         var h="";
         items.forEach(function(i){
           var q=cart[i.id]||0;
-          h+='<div class="item" data-id="'+i.id+'">'+(q&&!edit?'<span class="badge">'+q+'</span>':'')+
+          h+='<div class="item" data-id="'+i.id+'">'+(q&&!edit?'<span class="badge">'+q+'</span><button class="minus" data-m="'+i.id+'">−</button>':'')+
           '<div class="pic">'+(i.img?'<img src="'+i.img+'" alt="">':esc(i.emoji||"🍽️"))+'</div><div class="nm">'+esc(i.name)+'</div><div class="pr">$'+i.price+(edit?' · 點擊編輯':'')+'</div></div>';
         });
         if(edit)h+='<div class="item add" data-id="new">＋ 新增品項</div>';
@@ -131,11 +138,13 @@
       }
 
       $("grid").onclick=function(e){
+        var m=e.target.closest(".minus");
+        if(m){dec(+m.dataset.m);return;}
         var el=e.target.closest(".item");if(!el)return;var id=el.dataset.id;
         if(edit){openForm(id);return;}
         id=+id;cart[id]=(cart[id]||0)+1;render();
       };
-      $("lines").onclick=function(e){var b=e.target.closest("button");if(!b)return;var id=+b.dataset.m;cart[id]--;if(cart[id]<=0)delete cart[id];render();};
+      $("lines").onclick=function(e){var b=e.target.closest("button");if(!b)return;dec(+b.dataset.m);};
       $("recv").oninput=chg;
       $("clr").onclick=function(){cart={};$("recv").value="";render();};
       $("done").onclick=function(){var t=total();if(!t)return;today+=t;count++;save();cart={};$("recv").value="";render();$("done").textContent="已記錄（今日 $"+today+"／"+count+" 筆）";setTimeout(function(){$("done").textContent="完成這筆";},2500);};
